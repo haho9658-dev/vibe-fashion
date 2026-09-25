@@ -1,0 +1,7 @@
+# VIBEFASHION 패션 쇼핑몰 필요 패키지 목록
+# Python 3.13 지원 패키지
+
+flask>=3.0.0
+python-dotenv>=1.0.0
+supabase>=2.0.0
+gunicorn>=21.0.0

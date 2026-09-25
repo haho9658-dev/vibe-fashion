@@ -1,0 +1,23 @@
+# Python 캐시 및 가상환경
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+env/
+
+# 환경 변수 및 보안 키 (깃허브에 노출되지 않도록 제외)
+.env
+
+# 배포 및 빌드 산출물
+dist/
+build/
+*.egg-info/
+
+# IDE 설정 파일
+.vscode/
+.idea/
+
+*.pyc
+.DS_Store
+*.log
