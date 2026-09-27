@@ -11,11 +11,19 @@ load_dotenv()
 # 'main' 블루프린트 생성
 main_bp = Blueprint("main", __name__)
 
-# .env 의 URL·키를 읽어 supabase-py 클라이언트를 만든다
-supabase = create_client(
-    os.getenv('SUPABASE_URL'),
-    os.getenv('SUPABASE_ANON_KEY') or os.getenv('SUPABASE_KEY')
-)
+# .env 의 URL·키를 읽어 supabase-py 클라이언트를 만든다 (누락 시에도 서버 크래시 방지)
+_url = os.getenv('SUPABASE_URL')
+_key = os.getenv('SUPABASE_ANON_KEY') or os.getenv('SUPABASE_KEY')
+
+if _url and _key:
+    try:
+        supabase = create_client(_url, _key)
+    except Exception as e:
+        print(f"[Supabase 초기화 오류] {e}")
+        supabase = None
+else:
+    print("[Supabase 경고] SUPABASE_URL 또는 SUPABASE_ANON_KEY 환경변수가 설정되지 않았습니다.")
+    supabase = None
 
 
 @main_bp.route("/")
