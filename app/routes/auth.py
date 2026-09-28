@@ -454,7 +454,6 @@ def logout():
 @login_required
 def mypage():
     """
-    마이페이지 뷰 함수 (auth 접두사 버전)
-    - login_required 데코레이터 적용
+    마이페이지 뷰 함수 (auth 접두사 접근 시 /mypage로 리다이렉트)
     """
-    return render_template("auth/mypage.html", user=session.get("user", {}))
+    return redirect("/mypage")

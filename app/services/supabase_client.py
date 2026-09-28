@@ -11,10 +11,10 @@ from supabase import create_client, Client
 def get_supabase_client() -> Client | None:
     """
     Supabase 클라이언트를 생성하여 반환하는 헬퍼 함수
-    환경변수 SUPABASE_URL 및 SUPABASE_KEY를 확인합니다.
+    환경변수 SUPABASE_URL 및 SUPABASE_KEY(또는 SUPABASE_ANON_KEY)를 확인합니다.
     """
     supabase_url = os.getenv("SUPABASE_URL")
-    supabase_key = os.getenv("SUPABASE_KEY")
+    supabase_key = os.getenv("SUPABASE_KEY") or os.getenv("SUPABASE_ANON_KEY")
 
     # 유효한 URL과 KEY가 설정되어 있는지 확인 (기본 예시 값이 아닌 실제 값)
     if (

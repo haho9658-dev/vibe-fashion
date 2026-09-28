@@ -1,12 +1,8 @@
 # app/routes/main.py - 메인 페이지 라우트
-import os
 import traceback
-from flask import Blueprint, render_template
-from dotenv import load_dotenv
-from supabase import create_client
-
-# .env 환경 변수 로드
-load_dotenv()
+from flask import Blueprint, render_template, session
+from app.services.supabase_client import get_supabase_client
+from app.routes.auth import login_required
 
 # 'main' 블루프린트 생성
 main_bp = Blueprint("main", __name__)
@@ -50,21 +46,6 @@ DEFAULT_PRODUCTS = [
         "description": "포멀과 캐주얼을 아우르는 고급스러운 천연 가죽 소재의 더비 슈즈입니다."
     }
 ]
-
-
-def get_supabase_client():
-    """
-    요청 시점에 환경 변수를 읽어 Supabase 클라이언트를 생성합니다.
-    (배포 환경에서 환경 변수가 런타임에 주입되는 경우 대비)
-    """
-    url = os.getenv("SUPABASE_URL")
-    key = os.getenv("SUPABASE_ANON_KEY") or os.getenv("SUPABASE_KEY")
-    if url and key:
-        try:
-            return create_client(url, key)
-        except Exception as e:
-            print(f"[Supabase 클라이언트 생성 실패] {e}")
-    return None
 
 
 @main_bp.route("/")
@@ -135,19 +116,14 @@ def index():
 
 
 @main_bp.route("/mypage")
+@login_required
 def mypage():
     """
     마이페이지 라우트 (루트 레벨 /mypage)
-    - auth.py의 login_required 데코레이터 적용
+    - login_required 데코레이터 적용 (세션 내 user_id 검증)
     - 로그인한 회원의 정보 페이지 렌더링
     """
-    from app.routes.auth import login_required
-    from flask import session
+    return render_template("auth/mypage.html", user=session.get("user", {}))
 
-    @login_required
-    def _view():
-        return render_template("auth/mypage.html", user=session.get("user", {}))
-
-    return _view()
 
 
