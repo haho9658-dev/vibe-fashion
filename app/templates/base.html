@@ -48,9 +48,12 @@
                     </button>
 
                     {% if session.get('user') %}
-                    <span class="text-light small d-none d-md-inline ms-2">
+                    <a href="/mypage" class="text-light text-decoration-none small d-none d-md-inline ms-2">
                         <i class="bi bi-person-check text-warning"></i> {{ session['user']['name'] }}님
-                    </span>
+                    </a>
+                    <a href="/mypage" class="btn btn-outline-light btn-sm rounded-pill px-3">
+                        마이페이지
+                    </a>
                     <a href="{{ url_for('auth.logout') }}" class="btn btn-outline-secondary btn-sm rounded-pill px-3 text-light">
                         로그아웃
                     </a>
@@ -58,7 +61,7 @@
                     <a href="{{ url_for('auth.login') }}" class="btn btn-outline-light btn-sm rounded-pill px-3">
                         <i class="bi bi-person"></i> 로그인
                     </a>
-                    <a href="{{ url_for('auth.register') }}" class="btn btn-warning btn-sm rounded-pill px-3 fw-bold text-dark">
+                    <a href="{{ url_for('auth.signup') }}" class="btn btn-warning btn-sm rounded-pill px-3 fw-bold text-dark">
                         회원가입
                     </a>
                     {% endif %}

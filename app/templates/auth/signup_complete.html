@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block title %}회원가입 완료 - VIBEFASHION{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-7 col-lg-6">
+            <!-- 가입 완료 안내 카드 -->
+            <div class="card shadow-sm border-0 rounded-4 p-4 p-md-5 text-center">
+                <div class="mb-4">
+                    <div class="d-inline-flex align-items-center justify-content-center bg-success bg-opacity-10 text-success rounded-circle" style="width: 80px; height: 80px;">
+                        <i class="bi bi-envelope-check fs-1"></i>
+                    </div>
+                </div>
+
+                <h3 class="fw-bold mb-3">인증 메일을 보냈습니다</h3>
+
+                <p class="text-secondary mb-4">
+                    {% if email %}
+                    <strong class="text-dark">{{ email }}</strong>(으)로 인증 링크가 포함된 메일을 발송했습니다.<br>
+                    {% else %}
+                    가입하신 이메일 주소로 인증 링크가 포함된 메일을 발송했습니다.<br>
+                    {% endif %}
+                    메일함에서 인증 버튼 또는 링크를 클릭하여 회원가입을 완료해주세요.
+                </p>
+
+                <!-- Bootstrap 5 Alert 안내창 -->
+                <div class="alert alert-info text-start small mb-4" role="alert">
+                    <h6 class="alert-heading fw-bold mb-1"><i class="bi bi-info-circle me-1"></i> 메일이 도착하지 않았나요?</h6>
+                    <ul class="mb-0 ps-3">
+                        <li>스팸 메일함 또는 프로모션 메일함을 확인해주세요.</li>
+                        <li>네트워크 상황에 따라 1~2분 정도 소요될 수 있습니다.</li>
+                    </ul>
+                </div>
+
+                <div class="d-grid gap-2 d-sm-flex justify-content-sm-center">
+                    <a href="{{ url_for('auth.login') }}" class="btn btn-dark rounded-pill px-4 py-2 fw-bold">
+                        로그인 화면으로 이동
+                    </a>
+                    <a href="{{ url_for('main.index') }}" class="btn btn-outline-secondary rounded-pill px-4 py-2">
+                        홈으로 돌아가기
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

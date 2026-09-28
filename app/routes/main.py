@@ -133,3 +133,21 @@ def index():
 
     return render_template("index.html", products=products)
 
+
+@main_bp.route("/mypage")
+def mypage():
+    """
+    마이페이지 라우트 (루트 레벨 /mypage)
+    - auth.py의 login_required 데코레이터 적용
+    - 로그인한 회원의 정보 페이지 렌더링
+    """
+    from app.routes.auth import login_required
+    from flask import session
+
+    @login_required
+    def _view():
+        return render_template("auth/mypage.html", user=session.get("user", {}))
+
+    return _view()
+
+
