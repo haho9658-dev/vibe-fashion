@@ -32,6 +32,7 @@ AUTH_MESSAGES = {
     "missing_fields": "필수 입력 항목을 모두 입력해주세요.",
     "reset_failed": "비밀번호 재설정에 실패했습니다. 다시 시도해주세요.",
     "supabase_error": "인증 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.",
+    "callback_failed": "소셜 로그인 처리에 실패했습니다. 다시 시도해주세요.",
     # 성공 메시지
     "signup_complete": "회원가입이 완료되었습니다! 전송된 인증 메일을 확인해주세요.",
     "email_verified": "이메일 인증이 성공적으로 완료되었습니다.",
@@ -431,13 +432,126 @@ def reset_password():
 
 
 # ==============================================================================
-# [기타] 로그아웃 & 마이페이지
+# [7] GET /auth/microsoft - Microsoft 소셜 로그인
+# ==============================================================================
+@auth_bp.route("/microsoft")
+def microsoft():
+    """
+    Microsoft 소셜 로그인 시작 뷰 함수
+    - supabase.auth.sign_in_with_oauth(provider='azure') 호출
+    - redirect_to = SITE_URL + '/auth/callback'
+    - 반환된 url로 리다이렉트
+    """
+    supabase = get_supabase_client()
+    site_url = os.getenv("SITE_URL", "http://localhost:5000").rstrip("/")
+    redirect_to = f"{site_url}/auth/callback"
+
+    if supabase:
+        try:
+            # supabase-py sign_in_with_oauth 호출
+            oauth_res = None
+            try:
+                oauth_res = supabase.auth.sign_in_with_oauth({
+                    "provider": "azure",
+                    "options": {"redirect_to": redirect_to}
+                })
+            except TypeError:
+                oauth_res = supabase.auth.sign_in_with_oauth(
+                    provider="azure",
+                    redirect_to=redirect_to
+                )
+
+            # 반환된 url로 리다이렉트
+            redirect_url = getattr(oauth_res, "url", None) or (oauth_res.get("url") if isinstance(oauth_res, dict) else None)
+            if redirect_url:
+                return redirect(redirect_url)
+            else:
+                return redirect(url_for("auth.login", error="callback_failed"))
+        except Exception as e:
+            print(f"[Microsoft 소셜 로그인 오류] {e}")
+            return redirect(url_for("auth.login", error="callback_failed"))
+    else:
+        # 데모 모드 (Supabase 미설정 시) 바로 콜백으로 모의 리다이렉트
+        return redirect(url_for("auth.callback", code="demo-microsoft-code"))
+
+
+# ==============================================================================
+# [8] GET /auth/callback - OAuth 공용 콜백 (MS & 카카오)
+# ==============================================================================
+@auth_bp.route("/callback")
+def callback():
+    """
+    OAuth 콜백 처리 뷰 함수 (Microsoft 및 카카오 공용)
+    - URL 파라미터에서 code 추출
+    - supabase.auth.exchange_code_for_session(code) 호출
+    - 성공 시 Flask session에 user_id, email 저장
+    - /mypage 로 리다이렉트
+    - 실패 시 /auth/login?error=callback_failed
+    """
+    code = request.args.get("code", "").strip()
+    error = request.args.get("error")
+
+    # code가 없거나 에러가 전달된 경우 실패 처리
+    if error or not code:
+        return redirect(url_for("auth.login", error="callback_failed"))
+
+    supabase = get_supabase_client()
+
+    if supabase:
+        try:
+            auth_response = None
+            try:
+                auth_response = supabase.auth.exchange_code_for_session({"auth_code": code})
+            except (TypeError, AttributeError):
+                auth_response = supabase.auth.exchange_code_for_session(code)
+
+            if auth_response and auth_response.user:
+                # 성공 시 Flask session에 user_id, email 저장
+                session["user_id"] = auth_response.user.id
+                session["email"] = auth_response.user.email
+                session["user"] = {
+                    "id": auth_response.user.id,
+                    "email": auth_response.user.email,
+                    "name": (auth_response.user.user_metadata or {}).get(
+                        "full_name",
+                        (auth_response.user.user_metadata or {}).get(
+                            "name",
+                            (auth_response.user.email or "회원").split("@")[0]
+                        )
+                    )
+                }
+                if auth_response.session:
+                    session["access_token"] = auth_response.session.access_token
+                    session["refresh_token"] = auth_response.session.refresh_token
+
+                # /mypage 로 리다이렉트
+                return redirect("/mypage")
+            else:
+                return redirect(url_for("auth.login", error="callback_failed"))
+        except Exception as e:
+            print(f"[OAuth 콜백 세션 교환 오류] {e}")
+            return redirect(url_for("auth.login", error="callback_failed"))
+    else:
+        # 데모 모드 (Supabase 미설정 시)
+        session["user_id"] = "demo-social-user"
+        session["email"] = "social@vibefashion.com"
+        session["user"] = {
+            "id": "demo-social-user",
+            "email": "social@vibefashion.com",
+            "name": "소셜로그인회원"
+        }
+        return redirect("/mypage")
+
+
+# ==============================================================================
+# [9] GET /auth/logout - 로그아웃
 # ==============================================================================
 @auth_bp.route("/logout")
 def logout():
     """
     로그아웃 처리 뷰 함수
-    - Supabase 로그아웃 호출 및 Flask session 초기화
+    - supabase.auth.sign_out() 호출
+    - Flask session 삭제 → / 로 리다이렉트
     """
     supabase = get_supabase_client()
     if supabase:
@@ -447,7 +561,7 @@ def logout():
             pass
 
     session.clear()
-    return redirect(url_for("main.index", message="logged_out"))
+    return redirect("/")
 
 
 @auth_bp.route("/mypage")
